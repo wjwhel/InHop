@@ -23,9 +23,6 @@
     <ClInclude Include="CUserCmd.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Vector.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="sdk.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -33,18 +30,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="IVEngineClient.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="VMatrix.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Vector2D.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="IHandleEntity.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="QAngle.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -1,7 +1,4 @@
-
 #pragma once
-
-#include "Vector.h"
 
 struct CUserCmd {
     enum {

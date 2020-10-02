@@ -1,176 +1,50 @@
 #pragma once
 
-#include "Vector.h"
-#include "QAngle.h"
-#include "VMatrix.h"
+class Vector
+{
+public:
+	float x, y, z;
+};
 
-#define SIGNONSTATE_NONE		0	// no state yet, about to connect
-#define SIGNONSTATE_CHALLENGE	1	// client challenging server, all OOB packets
-#define SIGNONSTATE_CONNECTED	2	// client is connected to server, netchans ready
-#define SIGNONSTATE_NEW			3	// just got serverinfo and string tables
-#define SIGNONSTATE_PRESPAWN	4	// received signon buffers
-#define SIGNONSTATE_SPAWN		5	// ready to receive entity packets
-#define SIGNONSTATE_FULL		6	// we are fully connected, first non-delta packet received
-#define SIGNONSTATE_CHANGELEVEL	7	// server is changing level, please wait
-
-typedef struct InputContextHandle_t__* InputContextHandle_t;
-struct client_textmessage_t;
+typedef struct player_info_s player_info_t;
 struct model_t;
+struct Frustum_t;
+struct AudioState_t;
 class SurfInfo;
 class IMaterial;
-class CSentence;
 class CAudioSource;
-class AudioState_t;
+class QAngle;
+class VMatrix;
+class INetChannelInfo;
 class ISpatialQuery;
 class IMaterialSystem;
-class CPhysCollide;
-class IAchievementMgr;
-#define FLOW_OUTGOING	0		
-#define FLOW_INCOMING	1
-#define MAX_FLOWS		2		// in & out
-
-class INetChannelInfo
-{
-public:
-
-	enum {
-		GENERIC = 0,	// must be first and is default group
-		LOCALPLAYER,	// bytes for local player entity update
-		OTHERPLAYERS,	// bytes for other players update
-		ENTITIES,		// all other entity bytes
-		SOUNDS,			// game sounds
-		EVENTS,			// event messages
-		USERMESSAGES,	// user messages
-		ENTMESSAGES,	// entity messages
-		VOICE,			// voice data
-		STRINGTABLE,	// a stringtable update
-		MOVE,			// client move cmds
-		STRINGCMD,		// string command
-		SIGNON,			// various signondata
-		TOTAL,			// must be last and is not a real group
-	};
-
-	virtual const char* GetName(void) const = 0;	// get channel name
-	virtual const char* GetAddress(void) const = 0; // get channel IP address as string
-	virtual float		GetTime(void) const = 0;	// current net time
-	virtual float		GetTimeConnected(void) const = 0;	// get connection time in seconds
-	virtual int			GetBufferSize(void) const = 0;	// netchannel packet history size
-	virtual int			GetDataRate(void) const = 0; // send data rate in byte/sec
-
-	virtual bool		IsLoopback(void) const = 0;	// true if loopback channel
-	virtual bool		IsTimingOut(void) const = 0;	// true if timing out
-	virtual bool		IsPlayback(void) const = 0;	// true if demo playback
-
-	virtual float		GetLatency(int flow) const = 0;	 // current latency (RTT), more accurate but jittering
-	virtual float		GetAvgLatency(int flow) const = 0; // average packet latency in seconds
-	virtual float		GetAvgLoss(int flow) const = 0;	 // avg packet loss[0..1]
-	virtual float		GetAvgChoke(int flow) const = 0;	 // avg packet choke[0..1]
-	virtual float		GetAvgData(int flow) const = 0;	 // data flow in bytes/sec
-	virtual float		GetAvgPackets(int flow) const = 0; // avg packets/sec
-	virtual int			GetTotalData(int flow) const = 0;	 // total flow in/out in bytes
-	virtual int			GetSequenceNr(int flow) const = 0;	// last send seq number
-	virtual bool		IsValidPacket(int flow, int frame_number) const = 0; // true if packet was not lost/dropped/chocked/flushed
-	virtual float		GetPacketTime(int flow, int frame_number) const = 0; // time when packet was send
-	virtual int			GetPacketBytes(int flow, int frame_number, int group) const = 0; // group size of this packet
-	virtual bool		GetStreamProgress(int flow, int* received, int* total) const = 0;  // TCP progress if transmitting
-	virtual float		GetTimeSinceLastReceived(void) const = 0;	// get time since last recieved packet in seconds
-	virtual	float		GetCommandInterpolationAmount(int flow, int frame_number) const = 0;
-	virtual void		GetPacketResponseLatency(int flow, int frame_number, int* pnLatencyMsecs, int* pnChoke) const = 0;
-	virtual void		GetRemoteFramerate(float* pflFrameTime, float* pflFrameTimeStdDeviation) const = 0;
-
-	virtual float		GetTimeoutSeconds() const = 0;
-};
-
-class ISPSharedMemory;
-class CGamestatsData;
-class KeyValues;
-class CSteamAPIContext;
-struct Frustum_t;
-
-typedef void(*pfnDemoCustomDataCallback)(uint8_t* pData, size_t iSize);
-
-
-typedef struct player_info_s
-{
-	__int64         unknown;            //0x0000 
-	union
-	{
-		__int64       steamID64;          //0x0008 - SteamID64
-		struct
-		{
-			__int32     xuid_low;
-			__int32     xuid_high;
-		};
-	};
-	char            szName[128];        //0x0010 - Player Name
-	int             userId;             //0x0090 - Unique Server Identifier
-	char            szSteamID[20];      //0x0094 - STEAM_X:Y:Z
-	char            pad_0x00A8[0x10];   //0x00A8
-	unsigned long   iSteamID;           //0x00B8 - SteamID 
-	char            szFriendsName[128];
-	bool            fakeplayer;
-	bool            ishltv;
-	unsigned int    customfiles[4];
-	unsigned char   filesdownloaded;
-} player_info_t;
-
-#include "Vector2D.h"
-
-class IMapOverview // : public IBaseInterface
-{
-public:
-	virtual	~IMapOverview(void) {};
-
-	virtual	void SetVisible(bool state) = 0;	// set map panel visible
-	virtual void SetBounds(int x, int y, int wide, int tall) = 0; // set pos & size
-	virtual void SetZoom(float zoom) = 0; // set zoom
-	virtual void SetTime(float time) = 0; // set game time
-	virtual void SetAngle(float angle) = 0; // set map orientation
-	virtual void SetFollowAngle(bool state) = 0; // if true, map rotates with spectators view
-	virtual void SetCenter(Vector2D& mappos) = 0; // set map pos in center of panel
-	virtual void SetPlayerPositions(int index, const Vector& position, const QAngle& angle) = 0; // update player position
-	virtual Vector2D WorldToMap(Vector& worldpos) = 0; // convert 3d world to 2d map pos
-
-	virtual bool  IsVisible(void) = 0;	// true if MapOverview is visible
-	virtual void  GetBounds(int& x, int& y, int& wide, int& tall) = 0; // get current pos & size
-	virtual float GetZoom(void) = 0;
-
-	// deatils properties
-	virtual	void ShowPlayerNames(bool state) = 0;	// show player names under icons
-	virtual	void ShowTracers(bool state) = 0;	// show shooting traces as lines
-	virtual	void ShowExplosions(bool state) = 0;	// show, smoke, flash & HE grenades
-	virtual	void ShowHealth(bool state) = 0;		// show player health under icon
-	virtual	void ShowHurts(bool state) = 0;	// show player icon flashing if player is hurt
-	virtual	void ShowTracks(float seconds) = 0; // show player trails for n seconds
-};
-
 
 class IVEngineClient
 {
 public:
 	virtual int                   GetIntersectingSurfaces(const model_t* model, const Vector& vCenter, const float radius, const bool bOnlyVisibleSurfaces, SurfInfo* pInfos, const int nMaxInfos) = 0;
 	virtual Vector                GetLightForPoint(const Vector& pos, bool bClamp) = 0;
-	virtual IMaterial* TraceLineMaterialAndLighting(const Vector& start, const Vector& end, Vector& diffuseLightColor, Vector& baseColor) = 0;
-	virtual const char* ParseFile(const char* data, char* token, int maxlen) = 0;
+	virtual IMaterial*			  TraceLineMaterialAndLighting(const Vector& start, const Vector& end, Vector& diffuseLightColor, Vector& baseColor) = 0;
+	virtual const char*			  ParseFile(const char* data, char* token, int maxlen) = 0;
 	virtual bool                  CopyFile(const char* source, const char* destination) = 0;
 	virtual void                  GetScreenSize(int& width, int& height) = 0;
 	virtual void                  ServerCmd(const char* szCmdString, bool bReliable = true) = 0;
 	virtual void                  ClientCmd(const char* szCmdString) = 0;
 	virtual bool                  GetPlayerInfo(int ent_num, player_info_t* pinfo) = 0;
 	virtual int                   GetPlayerForUserID(int userID) = 0;
-	virtual client_textmessage_t* TextMessageGet(const char* pName) = 0; // 10
+	virtual void*				  TextMessageGet(const char* pName) = 0; // 10
 	virtual bool                  Con_IsVisible(void) = 0;
 	virtual int                   GetLocalPlayer(void) = 0;
-	virtual const model_t* LoadModel(const char* pName, bool bProp = false) = 0;
+	virtual const model_t*		  LoadModel(const char* pName, bool bProp = false) = 0;
 	virtual float                 GetLastTimeStamp(void) = 0;
-	virtual CSentence* GetSentence(CAudioSource* pAudioSource) = 0; // 15
+	virtual void*				  GetSentence(CAudioSource* pAudioSource) = 0; // 15
 	virtual float                 GetSentenceLength(CAudioSource* pAudioSource) = 0;
 	virtual bool                  IsStreaming(CAudioSource* pAudioSource) const = 0;
 	virtual void                  GetViewAngles(QAngle* va) = 0;
 	virtual void                  SetViewAngles(QAngle* va) = 0;
 	virtual int                   GetMaxClients(void) = 0; // 20
-	virtual const char* Key_LookupBinding(const char* pBinding) = 0;
-	virtual const char* Key_BindingForKey(int& code) = 0;
+	virtual const char*			  Key_LookupBinding(const char* pBinding) = 0;
+	virtual const char*			  Key_BindingForKey(int& code) = 0;
 	virtual void                  Key_SetBinding(int, char const*) = 0;
 	virtual void                  StartKeyTrapMode(void) = 0;
 	virtual bool                  CheckDoneKeyTrapping(int& code) = 0;
@@ -184,14 +58,14 @@ public:
 	virtual int                   IsBoxInViewCluster(const Vector& mins, const Vector& maxs) = 0;
 	virtual bool                  CullBox(const Vector& mins, const Vector& maxs) = 0;
 	virtual void                  Sound_ExtraUpdate(void) = 0;
-	virtual const char* GetGameDirectory(void) = 0;
-	virtual const VMatrix& WorldToScreenMatrix() = 0;
-	virtual const VMatrix& WorldToViewMatrix() = 0;
+	virtual const char*			  GetGameDirectory(void) = 0;
+	virtual const VMatrix&		  WorldToScreenMatrix() = 0;
+	virtual const VMatrix&		  WorldToViewMatrix() = 0;
 	virtual int                   GameLumpVersion(int lumpId) const = 0;
 	virtual int                   GameLumpSize(int lumpId) const = 0; // 40
 	virtual bool                  LoadGameLump(int lumpId, void* pBuffer, int size) = 0;
 	virtual int                   LevelLeafCount() const = 0;
-	virtual ISpatialQuery* GetBSPTreeQuery() = 0;
+	virtual ISpatialQuery*		  GetBSPTreeQuery() = 0;
 	virtual void                  LinearToGamma(float* linear, float* gamma) = 0;
 	virtual float                 LightStyleValue(int style) = 0; // 45
 	virtual void                  ComputeDynamicLighting(const Vector& pt, const Vector* pNormal, Vector& color) = 0;
@@ -200,9 +74,9 @@ public:
 	virtual bool                  SupportsHDR() = 0;
 	virtual void                  Mat_Stub(IMaterialSystem* pMatSys) = 0; // 50
 	virtual void                  GetChapterName(char* pchBuff, int iMaxLength) = 0;
-	virtual char const* GetLevelName(void) = 0;
-	virtual char const* GetLevelNameShort(void) = 0;
-	virtual char const* GetMapGroupName(void) = 0;
+	virtual char const*			  GetLevelName(void) = 0;
+	virtual char const*			  GetLevelNameShort(void) = 0;
+	virtual char const*			  GetMapGroupName(void) = 0;
 	virtual struct IVoiceTweak_s* GetVoiceTweakAPI(void) = 0;
 	virtual void                  SetVoiceCasterID(unsigned int someint) = 0; // 56
 	virtual void                  EngineStats_BeginFrame(void) = 0;
@@ -216,18 +90,17 @@ public:
 	virtual int                   SentenceGroupPick(int groupIndex, char* name, int nameBufLen) = 0;
 	virtual int                   SentenceGroupPickSequential(int groupIndex, char* name, int nameBufLen, int sentenceIndex, int reset) = 0;
 	virtual int                   SentenceIndexFromName(const char* pSentenceName) = 0;
-	virtual const char* SentenceNameFromIndex(int sentenceIndex) = 0;
+	virtual const char*			  SentenceNameFromIndex(int sentenceIndex) = 0;
 	virtual int                   SentenceGroupIndexFromName(const char* pGroupName) = 0;
-	virtual const char* SentenceGroupNameFromIndex(int groupIndex) = 0;
+	virtual const char*			  SentenceGroupNameFromIndex(int groupIndex) = 0;
 	virtual float                 SentenceLength(int sentenceIndex) = 0;
 	virtual void                  ComputeLighting(const Vector& pt, const Vector* pNormal, bool bClamp, Vector& color, Vector* pBoxColors = NULL) = 0;
 	virtual void                  ActivateOccluder(int nOccluderIndex, bool bActive) = 0;
 	virtual bool                  IsOccluded(const Vector& vecAbsMins, const Vector& vecAbsMaxs) = 0; // 74
 	virtual int                   GetOcclusionViewId(void) = 0;
-	virtual void* SaveAllocMemory(size_t num, size_t size) = 0;
+	virtual void*				  SaveAllocMemory(size_t num, size_t size) = 0;
 	virtual void                  SaveFreeMemory(void* pSaveMem) = 0;
-	virtual INetChannelInfo* GetNetChannelInfo(void) = 0;
-	virtual void                  DebugDrawPhysCollide(const CPhysCollide* pCollide, IMaterial* pMaterial, const matrix3x4_t& transform, const uint8_t* color) = 0; //79
+	virtual INetChannelInfo*	  GetNetChannelInfo(void) = 0;
 	virtual void                  CheckPoint(const char* pName) = 0; // 80
 	virtual void                  DrawPortals() = 0;
 	virtual bool                  IsPlayingDemo(void) = 0;
@@ -247,16 +120,16 @@ public:
 	virtual void                  SetOcclusionParameters(const int /*OcclusionParams_t*/& params) = 0; // 96
 	virtual void                  GetUILanguage(char* dest, int destlen) = 0;
 	virtual int                   IsSkyboxVisibleFromPoint(const Vector& vecPoint) = 0;
-	virtual const char* GetMapEntitiesString() = 0;
+	virtual const char*			  GetMapEntitiesString() = 0;
 	virtual bool                  IsInEditMode(void) = 0; // 100
 	virtual float                 GetScreenAspectRatio(int viewportWidth, int viewportHeight) = 0;
 	virtual bool                  REMOVED_SteamRefreshLogin(const char* password, bool isSecure) = 0;
 	virtual bool                  REMOVED_SteamProcessCall(bool& finished) = 0;
-	virtual unsigned int          GetEngineBuildNumber() = 0; // engines build
-	virtual const char* GetProductVersionString() = 0; // mods version number (steam.inf)
+	virtual unsigned int          GetEngineBuildNumber() = 0; 
+	virtual const char*			  GetProductVersionString() = 0; 
 	virtual void                  GrabPreColorCorrectedFrame(int x, int y, int width, int height) = 0;
 	virtual bool                  IsHammerRunning() const = 0;
-	virtual void                  ExecuteClientCmd(const char* szCmdString) = 0; //108
+	virtual void                  ExecuteClientCmd(const char* szCmdString) = 0;
 	virtual bool                  MapHasHDRLighting(void) = 0;
 	virtual bool                  MapHasLightMapAlphaData(void) = 0;
 	virtual int                   GetAppID() = 0;
@@ -268,19 +141,19 @@ public:
 	virtual void                  SetOverlayBindProxy(int iOverlayID, void* pBindProxy) = 0;
 	virtual bool                  CopyFrameBufferToMaterial(const char* pMaterialName) = 0;
 	virtual void                  ReadConfiguration(const int iController, const bool readDefault) = 0;
-	virtual void                  SetAchievementMgr(IAchievementMgr* pAchievementMgr) = 0;
-	virtual IAchievementMgr* GetAchievementMgr() = 0;
+	virtual void                  SetAchievementMgr(void* pAchievementMgr) = 0;
+	virtual void*				  GetAchievementMgr() = 0;
 	virtual bool                  MapLoadFailed(void) = 0;
 	virtual void                  SetMapLoadFailed(bool bState) = 0;
 	virtual bool                  IsLowViolence() = 0;
-	virtual const char* GetMostRecentSaveGame(void) = 0;
+	virtual const char*			  GetMostRecentSaveGame(void) = 0;
 	virtual void                  SetMostRecentSaveGame(const char* lpszFilename) = 0;
 	virtual void                  StartXboxExitingProcess() = 0;
 	virtual bool                  IsSaveInProgress() = 0;
 	virtual bool                  IsAutoSaveDangerousInProgress(void) = 0;
 	virtual unsigned int          OnStorageDeviceAttached(int iController) = 0;
 	virtual void                  OnStorageDeviceDetached(int iController) = 0;
-	virtual const char* GetSaveDirName(void) = 0;
+	virtual const char*			  GetSaveDirName(void) = 0;
 	virtual void                  WriteScreenshot(const char* pFilename) = 0;
 	virtual void                  ResetDemoInterpolation(void) = 0;
 	virtual int                   GetActiveSplitScreenPlayerSlot() = 0;
@@ -290,12 +163,10 @@ public:
 	virtual int                   GetSplitScreenPlayer(int nSlot) = 0;
 	virtual bool                  IsSplitScreenActive() = 0;
 	virtual bool                  IsValidSplitScreenSlot(int nSlot) = 0;
-	virtual int                   FirstValidSplitScreenSlot() = 0; // -1 == invalid
-	virtual int                   NextValidSplitScreenSlot(int nPreviousSlot) = 0; // -1 == invalid
-	virtual ISPSharedMemory* GetSinglePlayerSharedMemorySpace(const char* szName, int ent_num = (1 << 11)) = 0;
+	virtual int                   FirstValidSplitScreenSlot() = 0;
+	virtual int                   NextValidSplitScreenSlot(int nPreviousSlot) = 0; 
+	virtual void*				  GetSinglePlayerSharedMemorySpace(const char* szName, int ent_num = (1 << 11)) = 0;
 	virtual void                  ComputeLightingCube(const Vector& pt, bool bClamp, Vector* pBoxColors) = 0;
-	virtual void                  RegisterDemoCustomDataCallback(const char* szCallbackSaveID, pfnDemoCustomDataCallback pCallback) = 0;
-	virtual void                  RecordDemoCustomData(pfnDemoCustomDataCallback pCallback, const void* pData, size_t iDataLength) = 0;
 	virtual void                  SetPitchScale(float flPitchScale) = 0;
 	virtual float                 GetPitchScale(void) = 0;
 	virtual bool                  LoadFilmmaker() = 0;
@@ -315,10 +186,10 @@ public:
 	virtual bool                  IsCreatingReslist() = 0;
 	virtual bool                  IsCreatingXboxReslist() = 0;
 	virtual void                  SetTimescale(float flTimescale) = 0;
-	virtual void                  SetGamestatsData(CGamestatsData* pGamestatsData) = 0;
-	virtual CGamestatsData* GetGamestatsData() = 0;
-	virtual void                  GetMouseDelta(int& dx, int& dy, bool b) = 0; // unknown
-	virtual   const char* Key_LookupBindingEx(const char* pBinding, int iUserId = -1, int iStartCount = 0, int iAllowJoystick = -1) = 0;
+	virtual void                  SetGamestatsData(void* pGamestatsData) = 0;
+	virtual void*				  GetGamestatsData() = 0;
+	virtual void                  GetMouseDelta(int& dx, int& dy, bool b) = 0;
+	virtual const char*			  Key_LookupBindingEx(const char* pBinding, int iUserId = -1, int iStartCount = 0, int iAllowJoystick = -1) = 0;
 	virtual int                   Key_CodeForBinding(char  const*, int, int, int) = 0;
 	virtual void                  UpdateDAndELights(void) = 0;
 	virtual int                   GetBugSubmissionCount() const = 0;
@@ -334,13 +205,12 @@ public:
 	virtual void                  SearchPathsChangedAfterInstall() = 0;
 	virtual void                  ConfigureSystemLevel(int nCPULevel, int nGPULevel) = 0;
 	virtual void                  SetConnectionPassword(char const* pchCurrentPW) = 0;
-	virtual CSteamAPIContext* GetSteamAPIContext() = 0;
+	virtual void*				  GetSteamAPIContext() = 0;
 	virtual void                  SubmitStatRecord(char const* szMapName, unsigned int uiBlobVersion, unsigned int uiBlobSize, const void* pvBlob) = 0;
-	virtual void                  ServerCmdKeyValues(KeyValues* pKeyValues) = 0; // 203
+	virtual void                  ServerCmdKeyValues(int* pKeyValues) = 0; // 203
 	virtual void                  SpherePaintSurface(const model_t* model, const Vector& location, unsigned char chr, float fl1, float fl2) = 0;
 	virtual bool                  HasPaintmap(void) = 0;
 	virtual void                  EnablePaintmapRender() = 0;
-	//virtual void                TracePaintSurface( const model_t *model, const Vector& position, float radius, CUtlVector<Color>& surfColors ) = 0;
 	virtual void                  SphereTracePaintSurface(const model_t* model, const Vector& position, const Vector& vec2, float radius, /*CUtlVector<unsigned char, CUtlMemory<unsigned char, int>>*/ int& utilVecShit) = 0;
 	virtual void                  RemoveAllPaint() = 0;
 	virtual void                  PaintAllSurfaces(unsigned char uchr) = 0;
@@ -348,7 +218,7 @@ public:
 	virtual bool                  IsActiveApp() = 0;
 	virtual bool                  IsClientLocalToActiveServer() = 0;
 	virtual void                  TickProgressBar() = 0;
-	virtual InputContextHandle_t  GetInputContext(int /*EngineInputContextId_t*/ id) = 0;
+	virtual void				  GetInputContext(int /*EngineInputContextId_t*/ id) = 0;
 	virtual void                  GetStartupImage(char* filename, int size) = 0;
 	virtual bool                  IsUsingLocalNetworkBackdoor(void) = 0;
 	virtual void                  SaveGame(const char*, bool, char*, int, char*, int) = 0;
@@ -358,11 +228,11 @@ public:
 	virtual void                  FinishContainerWrites(int i) = 0;
 	virtual void                  FinishAsyncSave(void) = 0;
 	virtual int                   GetServerTick(void) = 0;
-	virtual const char* GetModDirectory(void) = 0;
+	virtual const char*			  GetModDirectory(void) = 0;
 	virtual bool                  AudioLanguageChanged(void) = 0;
 	virtual bool                  IsAutoSaveInProgress(void) = 0;
 	virtual void                  StartLoadingScreenForCommand(const char* command) = 0;
-	virtual void                  StartLoadingScreenForKeyValues(KeyValues* values) = 0;
+	virtual void                  StartLoadingScreenForKeyValues(int* values) = 0;
 	virtual void                  SOSSetOpvarFloat(const char*, float) = 0;
 	virtual void                  SOSGetOpvarFloat(const char*, float&) = 0;
 	virtual bool                  IsSubscribedMap(const char*, bool) = 0;
@@ -370,7 +240,7 @@ public:
 	virtual void                  GetDemoPlaybackParameters(void) = 0;
 	virtual int                   GetClientVersion(void) = 0;
 	virtual bool                  IsDemoSkipping(void) = 0;
-	virtual void                  SetDemoImportantEventData(const KeyValues* values) = 0;
+	virtual void                  SetDemoImportantEventData(const int* values) = 0;
 	virtual void                  ClearEvents(void) = 0;
 	virtual int                   GetSafeZoneXMin(void) = 0;
 	virtual bool                  IsVoiceRecording(void) = 0;

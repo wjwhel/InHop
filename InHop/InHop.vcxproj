@@ -156,13 +156,8 @@
   <ItemGroup>
     <ClInclude Include="CUserCmd.h" />
     <ClInclude Include="IClientEntityList.h" />
-    <ClInclude Include="IHandleEntity.h" />
     <ClInclude Include="IVEngineClient.h" />
-    <ClInclude Include="QAngle.h" />
     <ClInclude Include="sdk.h" />
-    <ClInclude Include="Vector.h" />
-    <ClInclude Include="Vector2D.h" />
-    <ClInclude Include="VMatrix.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

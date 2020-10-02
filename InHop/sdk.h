@@ -4,27 +4,14 @@
 #include "IVEngineClient.h"
 #include "CUserCmd.h"
 
+class IBaseClientDLL;
+class ClientMode;
+
 class CBaseEntity
 {
 public:
-
-	bool GetDormant()
+	int getFlags()
 	{
-		return *(bool*)(this + 0xE9);
-	}
-
-	int GetTeam()
-	{
-		return *(int*)(this + 0xF0);
-	}
-
-	int GetHealth()
-	{
-		return *(int*)(this + 0xFC);
-	}
-
-	int GetFlags()
-	{
-		return *(int*)(this + 0x104);
+		return *(int*)(this + 0x104); // Current m_fFlags = 0x104
 	}
 };
