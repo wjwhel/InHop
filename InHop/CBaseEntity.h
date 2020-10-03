@@ -1,12 +1,5 @@
 #pragma once
 
-#include "IClientEntityList.h"
-#include "IVEngineClient.h"
-#include "CUserCmd.h"
-
-class IBaseClientDLL;
-class ClientMode;
-
 class CBaseEntity
 {
 public:
