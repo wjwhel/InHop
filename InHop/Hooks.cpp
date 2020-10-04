@@ -15,7 +15,6 @@ namespace Hooks
 		*addr = uintptr_t(createMove);
 
 		VirtualProtect(addr, sizeof(addr), oldProtection, 0);
-
 		return true;
 	}
 
@@ -41,12 +40,8 @@ namespace Hooks
 		if (!localPlayer)
 			return;
 
-		static auto wasLastTimeOnGround{ localPlayer->getFlags() & 1 };
-
-		if (!(localPlayer->getFlags() & 1) && !wasLastTimeOnGround)
+		if (!(localPlayer->getFlags() & 1))
 			cmd->buttons &= ~CUserCmd::IN_JUMP;
-
-		wasLastTimeOnGround = localPlayer->getFlags() & 1;
 	}
 }
 
