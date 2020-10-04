@@ -5,54 +5,33 @@ namespace Hooks
 {
 	bool hook()
 	{
-		const auto fnEstimateTableLength = [](uintptr_t* pTable)
-		{
-			auto sReturn = std::size_t(0u);
-			MEMORY_BASIC_INFORMATION mbiTable{ };
+		addr = *reinterpret_cast<uintptr_t**>(Interfaces::clientMode) + 24;
 
-			while (NULL != VirtualQuery(reinterpret_cast<LPCVOID>(pTable[sReturn]), &mbiTable, sizeof mbiTable) &&
-				mbiTable.BaseAddress != nullptr &&
-				mbiTable.Type != NULL &&
-				mbiTable.Protect & (PAGE_EXECUTE | PAGE_EXECUTE_READ | PAGE_EXECUTE_READWRITE | PAGE_EXECUTE_WRITECOPY) &&
-				!(mbiTable.Protect & (PAGE_GUARD | PAGE_NOACCESS)))
-				sReturn++;
-			return sReturn;
-		};
+		DWORD oldProtection;
+		VirtualProtect(addr, sizeof(addr), PAGE_EXECUTE_READWRITE, &oldProtection);
 
-		pOldPanelTable = *reinterpret_cast<uintptr_t**>(Interfaces::clientMode);
+		origCreateMove = reinterpret_cast<createMove_t>(*addr);
 
-		if (pOldPanelTable == nullptr) {
-			return false;
-		}
+		*addr = uintptr_t(createMove);
 
-		const auto length = fnEstimateTableLength(pOldPanelTable);
-
-		if (length == NULL) {
-			return false;
-		}
-
-		pNewPanelTable = new uintptr_t[length];
-
-		memcpy(pNewPanelTable, pOldPanelTable, length * sizeof(uintptr_t));
-
-		*reinterpret_cast<uintptr_t**>(Interfaces::clientMode) = pNewPanelTable;
-
-		pNewPanelTable[24] = uintptr_t(createMove);
+		VirtualProtect(addr, sizeof(addr), oldProtection, 0);
 
 		return true;
 	}
 
 	void unHook()
 	{
-		*reinterpret_cast<uintptr_t**>(Interfaces::clientMode) = pOldPanelTable;
-		delete pNewPanelTable;
+		DWORD oldProtection;
+		VirtualProtect(addr, sizeof(addr), PAGE_EXECUTE_READWRITE, &oldProtection);
+
+		*addr = uintptr_t(origCreateMove);
+
+		VirtualProtect(addr, sizeof(addr), oldProtection, 0);
 	}
 
 	static void __stdcall createMove(float inputSampleTime, CUserCmd* cmd)
 	{
-		static auto fnOriginal = createMove_t(pOldPanelTable[24]);
-
-		fnOriginal(Interfaces::clientMode, inputSampleTime, cmd);
+		origCreateMove(Interfaces::clientMode, inputSampleTime, cmd);
 
 		if (!cmd->commandNumber)
 			return;

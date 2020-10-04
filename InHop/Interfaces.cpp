@@ -4,10 +4,10 @@ namespace Interfaces
 {
 	bool init()
 	{
-		client = reinterpret_cast<IBaseClientDLL*>(CaptureInterface(L"client.dll", "VClient018"));
-		entityList = reinterpret_cast<IClientEntityList*>(CaptureInterface(L"client.dll", "VClientEntityList003"));
-		engine = reinterpret_cast<IVEngineClient*>(CaptureInterface(L"engine.dll", "VEngineClient014"));
-		clientMode = **reinterpret_cast<ClientMode***>((*reinterpret_cast<uintptr_t**>(client))[10] + 5);
+		client		= reinterpret_cast<IBaseClientDLL*>(CaptureInterface(L"client.dll", "VClient018"));
+		entityList	= reinterpret_cast<IClientEntityList*>(CaptureInterface(L"client.dll", "VClientEntityList003"));
+		engine		= reinterpret_cast<IVEngineClient*>(CaptureInterface(L"engine.dll", "VEngineClient014"));
+		clientMode	= **reinterpret_cast<ClientMode***>((*reinterpret_cast<uintptr_t**>(client))[10] + 5);
 
 		return client != nullptr && entityList != nullptr && engine != nullptr && clientMode != nullptr;
 	}

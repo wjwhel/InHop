@@ -9,10 +9,10 @@ class ClientMode;
 
 namespace Interfaces
 {
-	inline IBaseClientDLL* client = nullptr;
-	inline IClientEntityList* entityList = nullptr;
-	inline IVEngineClient* engine = nullptr;
-	inline ClientMode* clientMode = nullptr;
+	inline IBaseClientDLL* client			= nullptr;
+	inline IClientEntityList* entityList	= nullptr;
+	inline IVEngineClient* engine			= nullptr;
+	inline ClientMode* clientMode			= nullptr;
 
 	bool init();
 	static void* CaptureInterface(const wchar_t* module, const char* name);
