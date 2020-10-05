@@ -4,7 +4,7 @@
 #include "Interfaces.h"
 #include "CUserCmd.h"
 
-typedef void(__thiscall* createMove_t)(ClientMode*, float inputSampleTime, CUserCmd* cmd);
+typedef bool(__thiscall* createMove_t)(IClientMode*, float inputSampleTime, CUserCmd* cmd);
 
 namespace Hooks
 {
@@ -12,5 +12,5 @@ namespace Hooks
 	inline createMove_t origCreateMove;
 	bool hook();
 	void unHook();
-	static void __stdcall createMove(float inputSampleTime, CUserCmd* cmd);
+	static bool __stdcall createMove(float inputSampleTime, CUserCmd* cmd);
 };
