@@ -1,6 +1,5 @@
 #include "Hooks.h"
 
-
 DWORD WINAPI InHop(HMODULE hModule) {
 	if (!Interfaces::init() || !Hooks::hook()) {
 		return FALSE;
@@ -11,11 +10,9 @@ DWORD WINAPI InHop(HMODULE hModule) {
 	}
 
 	Hooks::unHook();
-
-	FreeLibraryAndExitThread(hModule, 0); // https://docs.microsoft.com/en-us/windows/win32/api/libloaderapi/nf-libloaderapi-freelibraryandexitthread
+	FreeLibraryAndExitThread(hModule, 0);
 }
 
-// DDLMain - https://docs.microsoft.com/en-us/windows/win32/dlls/dllmain
 BOOL APIENTRY DllMain(HMODULE hModule,
 	DWORD  ul_reason_for_call,
 	LPVOID lpReserved
@@ -24,7 +21,7 @@ BOOL APIENTRY DllMain(HMODULE hModule,
 	switch (ul_reason_for_call)
 	{
 	case DLL_PROCESS_ATTACH:
-		DisableThreadLibraryCalls(hModule); // https://docs.microsoft.com/en-us/windows/win32/api/libloaderapi/nf-libloaderapi-disablethreadlibrarycalls
+		DisableThreadLibraryCalls(hModule);
 		CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)InHop, hModule, 0, NULL);
 		break;
 	case DLL_PROCESS_DETACH:

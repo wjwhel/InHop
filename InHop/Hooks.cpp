@@ -5,9 +5,6 @@ namespace Hooks
 {
 	bool hook()
 	{
-		// https://github.com/ValveSoftware/source-sdk-2013/blob/master/sp/src/game/client/iclientmode.h#L89
-		// 21 is the index of virtual function CreateMove in IClientMode, count starting at 0 from start of IClientMode class to CreateMove function.
-		// Valve sdk is outdated for some things so current index is actually 24 for CreateMove
 		addr = *reinterpret_cast<uintptr_t**>(Interfaces::clientMode) + 24;
 
 		DWORD oldProtection;
