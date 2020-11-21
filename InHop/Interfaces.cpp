@@ -12,12 +12,12 @@ namespace Interfaces
 		return client != nullptr && entityList != nullptr && engine != nullptr && clientMode != nullptr;
 	}
 
+	// CreateInterface exported function which returns address of interface.
 	static void* CaptureInterface(const wchar_t* module, const char* name)
 	{
-		if (auto createInterface = reinterpret_cast<void* (*)(const char* pName, int* pReturnCode)>(GetProcAddress(GetModuleHandleW(module), "CreateInterface"))) {
-			if (void* foundInterface = createInterface(name, nullptr)) {
-				return foundInterface;
-			}
-		}
+		auto createInterface = reinterpret_cast<void* (__cdecl*)(const char* pName, int* pReturnCode)>(GetProcAddress(GetModuleHandleW(module), "CreateInterface"));
+		void* Interface = createInterface(name, nullptr);
+
+		return Interface;
 	}
 }
